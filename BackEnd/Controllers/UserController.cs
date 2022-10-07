@@ -1,5 +1,8 @@
 ﻿using BackEnd.Data;
+using BackEnd.DTOS;
 using BackEnd.Entities;
+using BackEnd.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,21 +19,37 @@ namespace BackEnd.Controllers
     public class UserController : ControllerBase
     {
         private DataContext _context;
+        private ItokenService _token;
 
-        public UserController(DataContext context)
+        public UserController(DataContext context, ItokenService token)
         {
             _context = context;
+            _token = token;
         }
 
         // Get All Users
-        [HttpGet]
-        public async Task<IEnumerable<AppUser>> GetUsers()
+        [HttpGet("allusers")]
+        public async Task<IEnumerable<UserDto>> GetUsers()
         {
             var users = await _context.Users.ToListAsync();
-            return users;
+
+            List<UserDto> user = new List<UserDto>();
+
+           for(int i = 0; i < users.Count; i++)
+            {
+                user.Add(new UserDto
+                {
+                    UserName = users[i].UserName,
+                    Token = _token.CreateToken(users[i])
+                });
+            }
+
+           return user;
+            
         }
 
-        // Get User By Id
+        // Get User By Id 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<AppUser> GetUser(int id)
         {
@@ -39,7 +58,7 @@ namespace BackEnd.Controllers
         }
 
         // Add User
-        [HttpPost]
+        [HttpPost("adduser")]
         public async Task<AppUser> AddUser(AppUser user)
         {
             _context.Users.Add(user);
