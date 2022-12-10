@@ -4,14 +4,16 @@ using BackEnd.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BackEnd.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20221208172743_AddMessageTable")]
+    partial class AddMessageTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -80,10 +82,10 @@ namespace BackEnd.Migrations
                     b.Property<string>("Content")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("DateRead")
+                    b.Property<DateTime>("DateRead")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("MessageSent")
+                    b.Property<DateTime?>("MessageSent")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("RecipientDeleted")
