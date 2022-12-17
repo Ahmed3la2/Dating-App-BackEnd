@@ -1,17 +1,18 @@
 ﻿using BackEnd.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackEnd.Data
 {
-    public class DataContext : DbContext
+    public class DataContext : IdentityDbContext<AppUser, AppRole, int,
+                               IdentityUserClaim<int>, AppUserRole, IdentityUserLogin<int>,
+                               IdentityRoleClaim<int>, IdentityUserToken<int>>
     {
         public DataContext(DbContextOptions options) : base(options)
-        {
+        {     
 
         }
-
-        // create Table AppUser
-        public DbSet<AppUser> Users { get; set; }
 
         // create tabele UserLike Which Has many to many relation with(AppUser, AppUser)
         public DbSet<UserLike> likes { get; set; }
@@ -46,6 +47,18 @@ namespace BackEnd.Data
                         .HasOne(m => m.Recipient)
                         .WithMany(l => l.MessageRecevied)
                         .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AppUserRole>()
+                        .HasOne(UR => UR.User)
+                        .WithMany(u => u.UserRoles)
+                        .HasForeignKey(UR => UR.UserId)
+                        .IsRequired();
+            
+            modelBuilder.Entity<AppUserRole>()
+                        .HasOne(UR => UR.Role)
+                        .WithMany(u => u.UserRoles)
+                        .HasForeignKey(UR => UR.RoleId)
+                        .IsRequired();
         }
         
     }

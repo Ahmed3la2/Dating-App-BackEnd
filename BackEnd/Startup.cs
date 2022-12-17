@@ -1,5 +1,6 @@
 using AutoMapper;
 using BackEnd.Data;
+using BackEnd.Entities;
 using BackEnd.Helpers;
 using BackEnd.Interfaces;
 using BackEnd.MiddleWare;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -40,8 +42,7 @@ namespace BackEnd
     
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
-        {
-           
+        {       
             services.Configure<CloudinarySetting>(_Config.GetSection("CloudinarySetting"));
             services.AddScoped<ItokenService, TokenService>();
             services.AddScoped<IUserRepository, UserRepository>();
@@ -54,6 +55,20 @@ namespace BackEnd
             services.AddDbContext<DataContext>(options =>
             {
                 options.UseSqlServer(_Config.GetConnectionString("defaultconnection"));
+            });
+            services.AddIdentityCore<AppUser>(opt =>
+            {
+                opt.Password.RequireNonAlphanumeric = false;
+            }).AddRoles<AppRole>()
+              .AddRoleManager<RoleManager<AppRole>>()
+              .AddSignInManager<SignInManager<AppUser>>()
+              .AddRoleValidator<RoleValidator<AppRole>>()
+              .AddEntityFrameworkStores<DataContext>();
+
+            services.AddAuthorization(opt =>
+            {
+                opt.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
+                opt.AddPolicy("ModeratorPhotoRole", policy => policy.RequireRole("Admin", "Moderator"));
             });
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -120,6 +135,7 @@ namespace BackEnd
             app.UseRouting();
 
             app.UseCors(x=>x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+
 
             app.UseAuthentication();
             app.UseAuthorization();

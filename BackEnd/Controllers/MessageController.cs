@@ -33,6 +33,7 @@ namespace BackEnd.Controllers
             _mapper = mapper;
         }
 
+        //Send Messages Between Two Users
         [HttpPost]
         public async Task<ActionResult<MessageDto>> CreateMessage(CreateMessageDto createMessageDto)
         {
@@ -58,6 +59,7 @@ namespace BackEnd.Controllers
             return BadRequest("Cannot Create message");
         }
 
+        //Get InBox And OutBox Message For Current User
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MessageDto>>> GetMessageForUser([FromQuery] MessageParam messageParam)
         {
@@ -66,18 +68,32 @@ namespace BackEnd.Controllers
 
             var Message = await _messageRepository.GetMessageForUser(messageParam);
 
-            Response.AddPaginationHeader(Message.CurrentPage, Message.PageSize, Message.Count, Message.TotalPages);
+            Response.AddPaginationHeader(Message.CurrentPage, Message.PageSize, Message.TotalCount, Message.TotalPages);
 
             return Ok(Message);
         } 
 
-        [HttpGet("thread/{username}")]
+        //Get Conversation Between Two Users
+        [HttpGet("thread")]
 
-        public async Task<ActionResult<IEnumerable<MessageDto>>> GetConversation(string username)
+        public async Task<ActionResult<IEnumerable<MessageDto>>> GetConversation([FromQuery]MessageParam messageParam)
         {
             var current = User.GetUsername();
 
-            return Ok(await _messageRepository.GetMessageThread(current, username));
+            var messages = await _messageRepository.GetMessageThread(current, messageParam);
+
+            Response.AddPaginationHeader(messages.CurrentPage, messages.PageSize, messages.TotalCount, messages.TotalPages);
+
+            return Ok(messages);
+        }
+
+        //Delete Message By Send It's ID
+        [HttpDelete("{id}")]
+
+        public async Task DeleteMessage(int id)
+        {
+            var message = await _messageRepository.GetMessageAsync(id);
+            _messageRepository.DeleteMessage(message);
         }
     }
 }

@@ -24,24 +24,24 @@ namespace BackEnd.Controllers
     {
         private readonly ILikeRepository _like;
         private readonly IUserRepository _userRepository;
-        private readonly IMapper _mapper;
 
-        public UserLikesController(ILikeRepository like, IUserRepository userRepository, IMapper mapper)
+        public UserLikesController(ILikeRepository like, IUserRepository userRepository)
         {
             _like = like;
             _userRepository = userRepository;
-            _mapper = mapper;
         }
 
+        //Add User Like
         [HttpPost("{likedId}")]
         public async Task<ActionResult> AddLike(int likedId)
         {
+            //Get Current User
             var Id = Int32.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var user = await _userRepository.GetUserByIdAsync(Id);
+
+            //Get User Like, Check If Current User = LikedUser && If User Like LikedUser Before
             var userLike = await _like.GetUserLikAsynce(Id, likedId);
-
             if (userLike != null) return BadRequest("Cannot Like User Twice");
-
             if (user.Id == likedId) return BadRequest("You Cannot Like YourSelf");
                     
             user.LikedUsers.Add(new UserLike
@@ -56,6 +56,7 @@ namespace BackEnd.Controllers
 
         }
 
+        //Get Current User And See The Users Who Like And The Users Liked Him
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserLike>>> GetUserLike([FromQuery] LikeParam like, int UserId)
         {

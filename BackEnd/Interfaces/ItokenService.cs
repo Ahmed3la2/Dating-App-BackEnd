@@ -1,10 +1,11 @@
 ﻿using BackEnd.Entities;
+using System.Threading.Tasks;
 
 namespace BackEnd.Interfaces
 {
     public interface ItokenService
     {
-        string CreateToken(AppUser appUser);
+        Task<string> CreateToken(AppUser appUser);
 
     }
 }

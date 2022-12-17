@@ -44,10 +44,10 @@ namespace BackEnd.Data
         // Get All Users
         public  async Task<PageList<MemberDto>> GetUsers(UserParams param)
         {
-            /*var query = _context.Users.ProjectTo<MemberDto>(_mapper.ConfigurationProvider)*/
             var miniAge = DateTime.Today.AddYears(-param.MaxAge);
             var maxAge  = DateTime.Today.AddYears(-param.MiniAge - 1);
 
+            /*var query = _context.Users.ProjectTo<MemberDto>(_mapper.ConfigurationProvider)*/
             IQueryable<MemberDto> query = _context.Users
                         .Select(user => new MemberDto
                         {
@@ -78,7 +78,7 @@ namespace BackEnd.Data
 
             query = param.OrderBy switch
             {
-                "created" => query.OrderByDescending(query => query.Created),
+                "created" => query.OrderBy(query => query.Created),
                  _ => query.OrderByDescending(query => query.LastActive)
             };
             return await PageList<MemberDto>.CreateAsync(query, param.PageSize, param.PageNumber);

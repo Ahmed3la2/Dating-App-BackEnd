@@ -19,7 +19,6 @@ namespace BackEnd.Controllers
     [ServiceFilter(typeof(LogUserActivity))]
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous]
     public class UserController : ControllerBase
     {
         private readonly DataContext _context;
@@ -37,6 +36,7 @@ namespace BackEnd.Controllers
         }
 
         // Get All Users
+        [Authorize(Roles = "Admin")]
         [HttpGet("allusers")]
         public async Task< ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery]UserParams param)
         {
@@ -85,7 +85,7 @@ namespace BackEnd.Controllers
         public async Task<ActionResult> UpdateUser(MemberUpdateDto MemberUpdateDto)
         {
             // Get The UserName From The Token 
-            var userName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value;
 
             var user = await _userRepository.GetUserByNameAsync(userName);
 
@@ -113,7 +113,7 @@ namespace BackEnd.Controllers
         [HttpPost("add-photo")]
         public async Task<ActionResult<PhotoDto>> AddPhoto(IFormFile file)
         {
-            var userName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value;
             var user = await _userRepository.GetUserByNameAsync(userName);    
             var Result = await _photoService.AddImageAsync(file);
             if (Result.Error != null) return BadRequest();
@@ -138,7 +138,7 @@ namespace BackEnd.Controllers
         [HttpPut("set-main-photo/{photoId}")]
         public async Task<ActionResult> SetMainPhoto(int photoId)
         {
-            var userName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value;
             var user = await _userRepository.GetUserByNameAsync(userName);
 
             var mainPhoto =  user.Photos.FirstOrDefault(x => x.IsMain);
@@ -156,7 +156,7 @@ namespace BackEnd.Controllers
         [HttpDelete("delete-photo/{id}")]
         public async Task<ActionResult> Delete(int id)
         {
-            var userName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value;
             var user = await _userRepository.GetUserByNameAsync(userName);
 
             var Photo = user.Photos.FirstOrDefault(x => x.Id == id);

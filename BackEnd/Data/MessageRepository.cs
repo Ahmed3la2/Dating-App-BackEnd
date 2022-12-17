@@ -43,9 +43,9 @@ namespace BackEnd.Data
 
             query = messageParam.Container switch
             {
-                "inbox" => query.Where(m => m.Recipient.UserName == messageParam.UserName),
-                "outbox" => query.Where(m => m.Sender.UserName == messageParam.UserName),
-                _ => query.Where(m => m.Recipient.UserName == messageParam.UserName && m.DateRead == null)
+                "inbox" => query.Where(m => m.RecipientUserName == messageParam.UserName),
+                "outbox" => query.Where(m => m.SenderUserName == messageParam.UserName),
+                _ => query.Where(m => m.RecipientUserName == messageParam.UserName && m.DateRead == null)
             };
 
             var message = query.Select(q => new MessageDto
@@ -67,15 +67,15 @@ namespace BackEnd.Data
         }
 
         //Get Conversation Between Two Users
-        public async Task<IEnumerable<MessageDto>> GetMessageThread(string CurrentUserName, string RecipientName)
+        public async Task<PageList<MessageDto>> GetMessageThread(string CurrentUserName, MessageParam messageParam)
         {
            var messages = _context.messages
                                   .Include(m => m.Sender).ThenInclude(s => s.Photos)
                                   .Include(m => m.Recipient).ThenInclude(s => s.Photos)
                                   .OrderByDescending(m => m.MessageSent)
                                   .Where(m => m.SenderUserName == CurrentUserName 
-                                   && m.RecipientUserName == RecipientName
-                                   || m.SenderUserName == RecipientName
+                                   && m.RecipientUserName == messageParam.UserName
+                                   || m.SenderUserName == messageParam.UserName
                                    && m.RecipientUserName == CurrentUserName).AsQueryable();
 
 
@@ -90,7 +90,6 @@ namespace BackEnd.Data
                 await _context.SaveChangesAsync();
             }
 
-
             var message = messages.Select(m => new MessageDto
             {
                 Content= m.Content,
@@ -104,7 +103,7 @@ namespace BackEnd.Data
                 RecipientId=m.Recipient.Id,
             });
 
-            return await message.ToListAsync();
+            return await  PageList<MessageDto>.CreateAsync(message, messageParam.PageSize, messageParam.PageNumber);
         }
 
         //Save ConText

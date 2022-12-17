@@ -1,5 +1,7 @@
 using BackEnd.Data;
+using BackEnd.Entities;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,9 +24,12 @@ namespace BackEnd
 
             try
             {
-                var context = services.GetRequiredService<DataContext>();
+                var context     = services.GetRequiredService<DataContext>();
+                var UserManager = services.GetRequiredService<UserManager<AppUser>>();
+                var RoleManager = services.GetRequiredService<RoleManager<AppRole>>();
+
                 await context.Database.MigrateAsync();
-                await Seed.SeedUsers(context);
+                await Seed.SeedUsers(UserManager, RoleManager);
             }
 
             catch (Exception ex)

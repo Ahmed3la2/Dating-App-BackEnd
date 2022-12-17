@@ -17,7 +17,7 @@ namespace BackEnd.Interfaces
 
         Task<PageList<MessageDto>> GetMessageForUser(MessageParam messageParam);
 
-        Task<IEnumerable<MessageDto>> GetMessageThread(string CurrentUserName, string RecipientName);
+        Task<PageList<MessageDto>> GetMessageThread(string CurrentUserName, MessageParam messageParam);
 
         Task<bool> SaveAllAsync();
     }
