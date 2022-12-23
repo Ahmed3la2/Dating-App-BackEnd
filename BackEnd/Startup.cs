@@ -147,8 +147,7 @@ namespace BackEnd
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "BackEnd v1"));
             }
 
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
+            
 
             app.UseRouting();
 
@@ -161,12 +160,17 @@ namespace BackEnd
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
                 endpoints.MapHub<PresenceHub>("hubs/presence");
                 endpoints.MapHub<MessageHub>("hubs/message");
+                endpoints.MapFallbackToController("Index", "fallback");
             });
         }
     }
 }
+ 
