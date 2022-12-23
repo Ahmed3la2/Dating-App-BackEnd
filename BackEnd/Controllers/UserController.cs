@@ -36,32 +36,31 @@ namespace BackEnd.Controllers
         }
 
         // Get All Users
-        [Authorize(Roles = "Admin")]
         [HttpGet("allusers")]
-        public async Task< ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery]UserParams param)
+        public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery] UserParams param)
         {
             var userName = User.FindFirst(ClaimTypes.Name)?.Value;
 
-            var user =  await _userRepository.GetUserByNameAsync(userName);
+            var user = await _userRepository.GetUserByNameAsync(userName);
 
-            param.CurrentUserName =  user.UserName;
-          
-            var users =  await _userRepository.GetUsers(param);
+            param.CurrentUserName = user.UserName;
 
-            Response.AddPaginationHeader(users.CurrentPage,users.PageSize,users.TotalCount,users.TotalPages);
+            var users = await _userRepository.GetUsers(param);
 
-            return Ok(users);      
+            Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
+
+            return Ok(users);
         }
 
         // Get User By Id 
         [HttpGet("{id}")]
         public async Task<MemberDto> GetUser(int id)
         {
-             var user =  await _userRepository.GetUserByIdAsync(id);
-             var userToReturn = _mapper.Map<MemberDto>(user);
-             return userToReturn;
+            var user = await _userRepository.GetUserByIdAsync(id);
+            var userToReturn = _mapper.Map<MemberDto>(user);
+            return userToReturn;
         }
-        
+
         // Get User By UserName
         [HttpGet("user{username}", Name = "GetUser")]
         public async Task<MemberDto> GetUser(string username)
@@ -91,19 +90,19 @@ namespace BackEnd.Controllers
 
 
             // this is instead to ==>
-                                  _mapper.Map(MemberUpdateDto, user);
+            _mapper.Map(MemberUpdateDto, user);
 
-           // to do this ==>
-                            // user.Country = MemberUpdateDto.Country;
-                            // user.City = MemberUpdateDto.City;
-                            // user.Intrest = MemberUpdateDto.Intrest;
-                            // user.LookingFor = MemberUpdateDto.LookingFor;
+            // to do this ==>
+            // user.Country = MemberUpdateDto.Country;
+            // user.City = MemberUpdateDto.City;
+            // user.Intrest = MemberUpdateDto.Intrest;
+            // user.LookingFor = MemberUpdateDto.LookingFor;
 
 
 
             _userRepository.Update(user);
 
-            if(await _userRepository.SaveAllAsync()) return NoContent();
+            if (await _userRepository.SaveAllAsync()) return NoContent();
 
             return BadRequest("failed To Update User");
 
@@ -114,22 +113,22 @@ namespace BackEnd.Controllers
         public async Task<ActionResult<PhotoDto>> AddPhoto(IFormFile file)
         {
             var userName = User.FindFirst(ClaimTypes.Name)?.Value;
-            var user = await _userRepository.GetUserByNameAsync(userName);    
+            var user = await _userRepository.GetUserByNameAsync(userName);
             var Result = await _photoService.AddImageAsync(file);
             if (Result.Error != null) return BadRequest();
             var photo = new Photo
             {
                 Url = Result.SecureUrl.AbsoluteUri,
                 PublicId = Result.PublicId
-            }; 
-            if(user.Photos.Count == 0)
+            };
+            if (user.Photos.Count == 0)
             {
-               photo.IsMain = true;
-            } 
+                photo.IsMain = true;
+            }
             user.Photos.Add(photo);
-            if(await _userRepository.SaveAllAsync())
+            if (await _userRepository.SaveAllAsync())
             {
-                return CreatedAtRoute("GetUser", new {username = user.UserName}, _mapper.Map<PhotoDto>(photo));
+                return CreatedAtRoute("GetUser", new { username = user.UserName }, _mapper.Map<PhotoDto>(photo));
             }
             return BadRequest("Prolem Adding Photo");
         }
@@ -141,9 +140,9 @@ namespace BackEnd.Controllers
             var userName = User.FindFirst(ClaimTypes.Name)?.Value;
             var user = await _userRepository.GetUserByNameAsync(userName);
 
-            var mainPhoto =  user.Photos.FirstOrDefault(x => x.IsMain);
+            var mainPhoto = user.Photos.FirstOrDefault(x => x.IsMain);
             mainPhoto.IsMain = false;
-            
+
             var NewMainPhoto = user.Photos.FirstOrDefault(x => x.Id == photoId);
             NewMainPhoto.IsMain = true;
 
@@ -165,9 +164,9 @@ namespace BackEnd.Controllers
 
             if (Photo.IsMain) return BadRequest("You Cnnot Remove Your Main Photo");
 
-            var result = await _photoService.DeleteImageAsync(Photo.PublicId); 
+            var result = await _photoService.DeleteImageAsync(Photo.PublicId);
 
-            if(result.Error != null) return BadRequest(result.Error.Message);
+            if (result.Error != null) return BadRequest(result.Error.Message);
 
             user.Photos.Remove(Photo);
 
@@ -176,5 +175,19 @@ namespace BackEnd.Controllers
             return NoContent();
         }
 
-    } 
+        [HttpGet("get-member-photo")]
+        public async Task<ActionResult<IEnumerable<PhotoDto>>> GetMemberPhoto(string userName)
+        {
+            var member = await _userRepository.GetUserByNameAsync(userName);
+            var memberPhotos = member.Photos.Select(x => new PhotoDto
+            {
+                 Id = x.Id,
+                 IsMain = x.IsMain,
+                 Url = x.Url                                
+            });
+            return Ok(memberPhotos);
+        }
+
+    }
+    
 }

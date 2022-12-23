@@ -73,8 +73,7 @@ namespace BackEnd.Data
                             })
                         }).AsQueryable()
                         .Where(u => u.Gender == param.Gender)
-                        .Where(u => u.UserName != param.CurrentUserName)
-                        .Where(u => u.DateOfBirth >= miniAge && u.DateOfBirth <= maxAge);
+                        .Where(u => u.UserName != param.CurrentUserName);
 
             query = param.OrderBy switch
             {

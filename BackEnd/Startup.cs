@@ -5,6 +5,7 @@ using BackEnd.Helpers;
 using BackEnd.Interfaces;
 using BackEnd.MiddleWare;
 using BackEnd.Services;
+using BackEnd.signalR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -44,6 +45,7 @@ namespace BackEnd
         public void ConfigureServices(IServiceCollection services)
         {       
             services.Configure<CloudinarySetting>(_Config.GetSection("CloudinarySetting"));
+            services.AddSingleton<PresenceTracker>();
             services.AddScoped<ItokenService, TokenService>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
@@ -114,7 +116,23 @@ namespace BackEnd
                         ValidateIssuer = false,
                         ValidateAudience = false
                     };
+
+                    option.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(path) && path.StartsWithSegments("/hubs"))
+                            {
+                                context.Token = accessToken;
+                            }
+
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -134,8 +152,11 @@ namespace BackEnd
 
             app.UseRouting();
 
-            app.UseCors(x=>x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
-
+            app.UseCors(x => x
+                           .AllowAnyMethod()
+                           .AllowAnyHeader()
+                           .SetIsOriginAllowed(origin => true) // allow any origin
+                           .AllowCredentials());
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -143,6 +164,8 @@ namespace BackEnd
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<PresenceHub>("hubs/presence");
+                endpoints.MapHub<MessageHub>("hubs/message");
             });
         }
     }

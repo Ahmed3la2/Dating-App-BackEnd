@@ -1,21 +1,17 @@
 ﻿using AutoMapper;
-using BackEnd.Data;
 using BackEnd.DTOS;
 using BackEnd.Entities;
 using BackEnd.Helpers;
 using BackEnd.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BackEnd.Controllers
-{   [ServiceFilter(typeof(LogUserActivity))]
+{
+    [ServiceFilter(typeof(LogUserActivity))]
     [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
